@@ -15,7 +15,6 @@ import os
 
 
 class run_file:
-
     """if we are doing unit testing, Please uncomment below lines and inherit list_of_files class (when running this
     file only) """
 
@@ -28,8 +27,19 @@ class run_file:
     def pre_cleanup_txt(self):
         _cwd = os.getcwd()
         for _txt in os.listdir(_cwd):
-            if _txt.endswith('.txt'):
+            if _txt.endswith('.txt') and not _txt.startswith('Requriments'):
                 os.remove(_txt)
+            # elif _txt.startswith('custom_file') or _txt.startswith('Resume'):
+            #     os.remove(_txt)
+
+    def resume_exists(self):
+        _cwd = os.getcwd()
+        for _txt in os.listdir(_cwd):
+            if _txt.startswith('Resume.docx'):
+                return True
+            else:
+                return False
+
 
     def call_bot(self):
         count = 0
@@ -49,6 +59,7 @@ class run_file:
             raise IOError("FILE NOT FOUND")
         else:
             return True
+
 
     def change_docx_to_text(self):
         """
@@ -108,53 +119,64 @@ class run_file:
         except:
             print(sys.exc_info())
 
-    # def sending_emails(self):
-    #     """
-    #     This function will send emails
-    #     :param None:
-    #     :return None:
-    #     """
-    #     try:
-    #             today_date = strftime("%a, %d %b %Y ", gmtime())
-    #             new_pass = self.unlocking_password(password=data_stored['User_information']['Password'])
-    #             body_pattern = "Hi,\n" \
-    #                            f"\n{data_stored['User_information']['User_info']}+ years of experience in Software Testing ( Manual and Automation Testing)\n" \
-    #                            "\nPFA Resume \n" \
-    #                            f"\nI will be available today ({today_date}) between 10:30 AM to 10:00 PM for the Google hangouts/ Zoom interviews. \n" \
-    #                            "\nPlease check the panel availability and confirm the interview timings.\n" \
-    #                            f"1) Overall experience:{data_stored['User_information']['User_info']} +Years\n" \
-    #                            "2) Current Salary: 4.80 lakhs\n" \
-    #                            "3) Expected Salary: as per company norms\n" \
-    #                            "4) Max Time required to join: 2 weeks\n" \
-    #                            "5) Relocation: Yes\n" \
-    #                            "6) Testing certification: ISEB Certified\n" \
-    #                            "7) Education : B.Tech\n" \
-    #                            "\nThanks & Regards,\n" \
-    #                            f"{data_stored['User_information']['User_name']}"
-    #             subject = "ISEB Certified Tester---Test Engineer Openings--Manual || Automation Test Engineer || --2 Weeks notice period"
-    #             body = body_pattern
-    #             sender_email = ""
-    #             receiver_email = self.get_emails()
-    #             password = new_pass
-    #             message = MIMEMultipart()
-    #             message["From"] = sender_email
-    #             message["Subject"] = subject
-    #             message.attach(MIMEText(body, "plain"))
-    #             with open(filename, "rb") as attachment:
-    #                 part = MIMEBase("application", "octet-stream")
-    #                 part.set_payload(attachment.read())
-    #             encoders.encode_base64(part)
-    #             part.add_header(
-    #                 "Content-Disposition",
-    #                 f"attachment; filename= {filename}",
-    #             )
-    #             message.attach(part)
-    #             text = message.as_string()
-    #             context = ssl.create_default_context()
-    #             with smtplib.SMTP_SSL("smtp.gmail.com", 465, context=context) as server:
-    #                 server.login(sender_email, password)
-    #                 server.sendmail(sender_email, receiver_email, text)
-    #         except smtplib.SMTPResponseException as e:
-    #             print(f"Problem in email design technique {e}")
-    #     except Exception as e:
-    #         print(f"Problem in sending emails function {e}")
+    def sending_emails(self, signature_name, user_email, password,
+                       year_exp):
+
+        resume = 'emails_id.txt'
+
+        """
+        This function will send emails.
+        :param None:
+        :return None:
+        """
+
+        try:
+            today_date = strftime("%a, %d %b %Y ", gmtime())
+            body_pattern = "Hi,\n" \
+                           f"\n{year_exp}+ years of experience in Software Testing ( Manual and Automation Testing)\n" \
+                           "\nPFA Resume \n" \
+                           f"\nI will be available today ({today_date}) between 10:30 AM to 10:00 PM for the Google " \
+                           f"hangouts/ Zoom interviews. \n" \
+                           "\nPlease check the panel availability and confirm the interview timings.\n" \
+                           f"1) Overall experience:{year_exp} +Years\n" \
+                           "2) Current Salary: 4.80 lakhs\n" \
+                           "3) Expected Salary: as per company norms\n" \
+                           "4) Max Time required to join: 2 weeks\n" \
+                           "5) Relocation: Yes\n" \
+                           "6) Testing certification: ISEB Certified\n" \
+                           "7) Education : B.Tech\n" \
+                           "\nThanks & Regards,\n" \
+                           f"{signature_name}"
+            subject = "ISEB Certified Tester---Test Engineer Openings--Manual || Automation Test Engineer || --2 " \
+                      "Weeks notice period "
+            body = body_pattern
+            sender_email = user_email
+            receiver_email = self.get_emails()
+            password = password
+            message = MIMEMultipart()
+            message["From"] = sender_email
+            message["Subject"] = subject
+            message.attach(MIMEText(body, "plain"))
+            filename = resume
+            with open(filename, "rb") as attachment:
+                part = MIMEBase("application", "octet-stream")
+                part.set_payload(attachment.read())
+            encoders.encode_base64(part)
+            part.add_header(
+                "Content-Disposition",
+                f"attachment; filename= {filename}",
+            )
+            message.attach(part)
+            text = message.as_string()
+            context = ssl.create_default_context()
+            with smtplib.SMTP_SSL("smtp.gmail.com", 465, context=context) as server:
+                server.login(sender_email, password)
+                server.sendmail(sender_email, receiver_email, text)
+            server.close()
+        except Exception as e:
+            print(f"Problem in sending emails function {e}")
+
+
+# if __name__ == '__main__':
+#     obj = run_file()
+#     obj.sending_emails()
