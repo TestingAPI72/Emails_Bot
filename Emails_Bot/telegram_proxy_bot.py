@@ -87,6 +87,11 @@ def unknown_text(update: Update, context: CallbackContext):
 
 
 def stop(update: Update, context: CallbackContext):
+    jenkins_uri = '192.168.0.171:8080'
+    job_name = 'Telegram_Monitoring_Bot'
+    stop_build_url =f'http://{jenkins_uri}/job/{job_name}/lastBuild/stop'
+    _respone = requests.get(stop_build_url)
+    assert _respone.status_code==200
     exit(0)
 
 
