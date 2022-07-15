@@ -1,5 +1,6 @@
 from Run_File import run_file
 from list_of_files import list_of_files
+import os
 
 
 class Executor:
@@ -17,6 +18,11 @@ class Executor:
         obj1.change_docx_to_text()
         obj1.generator_email()
         obj1.get_emails()
-        obj1.sending_emails()
+        obj1.sending_emails(signature_name=os.getenv('Name'), user_email=os.getenv('Email'),
+                            password=os.getenv('Password'), year_exp=os.getenv('Years_Of_Experience'),
+                            notice_period=os.getenv('Notice_Period'))
 
 
+if __name__ == '__main__':
+    obj = Executor()
+    obj.start_process()

@@ -40,7 +40,6 @@ class run_file:
             else:
                 return False
 
-
     def call_bot(self):
         count = 0
         if self.check_files_present():
@@ -59,7 +58,6 @@ class run_file:
             raise IOError("FILE NOT FOUND")
         else:
             return True
-
 
     def change_docx_to_text(self):
         """
@@ -120,7 +118,7 @@ class run_file:
             print(sys.exc_info())
 
     def sending_emails(self, signature_name=None, user_email=None, password=None,
-                       year_exp=None):
+                       year_exp=None, notice_period='2 Weeks'):
 
         resume = 'Resume.docx'
 
@@ -147,8 +145,8 @@ class run_file:
                            "7) Education : B.Tech\n" \
                            "\nThanks & Regards,\n" \
                            f"{signature_name}"
-            subject = "ISEB Certified Tester---Test Engineer Openings--Manual || Automation Test Engineer || --2 " \
-                      "Weeks notice period "
+            subject = "ISEB Certified Tester---Test Engineer Openings--Manual || Automation Test Engineer || -- " \
+                      f"{notice_period} notice period "
             body = body_pattern
             sender_email = user_email
             receiver_email = self.get_emails()
@@ -175,7 +173,6 @@ class run_file:
             server.close()
         except Exception as e:
             print(f"Problem in sending emails function {e}")
-
 
 # if __name__ == '__main__':
 #     obj = run_file()

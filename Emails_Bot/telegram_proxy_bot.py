@@ -34,8 +34,9 @@ def start(update: Update, context: CallbackContext):
     gmail_obj.disk_cleanup()
     file_obj.pre_cleanup_txt()
     update.message.reply_text(
-        f"Hello {_user_name}, Welcome to the Emails Bot.Please write /help command to see lists of available "
-        f"commands")
+        f"Hello {_user_name}, Welcome to the Emails Bot."
+        f"Please send your data in below listed format(Eg:name,email,email_password,year_of_exp,notice_period)"
+        f"To Encrypt Your Password, Please Contact Admin")
 
 
 def helpme(update: Update, context: CallbackContext):
@@ -44,7 +45,8 @@ def helpme(update: Update, context: CallbackContext):
                               "	/EmailsListOnly - To get EmailsListOnly\n"
                               "/DisplayEmails - To display emails !!!(Please type this command after Downloadfiles, "
                               "EmailsListOnly "
-                              " /Build - download files and convert it and shoot out email")
+                              "/RunJenkins - download files and convert it and shoot out email(Please run this "
+                              "command if you are not using above listed commands)")
 
 
 def get_files_from_drive(update: Update, context: CallbackContext):
@@ -98,11 +100,20 @@ def resume_check(update: Update, context: CallbackContext):
 def welcome(user_input=None):
     global _user_name
     _user_name = user_input
-    answer = f'Hi {_user_name}, Please Upload Your Resume in docx format and Type /Stop and Wait for few seconds.....'
+    answer = f'Hi {_user_name}, Please Upload Your Resume in docx format and ' \
+             f'Type /Stop and Wait for few seconds..... and' \
+             f' type /start command to restart the bot and enter your name again'
     return answer
 
 
+def data_collector(data=None):
+    if data.find(','):
+        return data.split()
+
+
 def build_jenkins(update: Update, context: CallbackContext):
+    user_data = data_collector()
+    assert len(user_data) > 2, "INSUFFICIENT DATA PROVIDED"
     QUEUE_POLL_INTERVAL = 2
     JOB_POLL_INTERVAL = 20
     OVERALL_TIMEOUT = 14400  # 4 hour
@@ -111,7 +122,8 @@ def build_jenkins(update: Update, context: CallbackContext):
     job_name = 'Send_Emails'
     # start the build
 
-    start_build_url = 'http://{}/job/{}/build?token={}'.format(jenkins_uri, job_name, auth_token)
+    start_build_url = f'http://{jenkins_uri}/job/{job_name}/buildWithParameters?token={auth_token}&Name={user_data[0]}' \
+                      f'&Email={user_data[1]}&Password={user_data[2]}&Years_Of_Experience={user_data[3]}&Notice_Period={user_data[4]}'
     response = requests.post(start_build_url)
 
     # from return headers get job queue location
@@ -185,6 +197,7 @@ def downloader(update: Update, context: CallbackContext):
 def reply(update, context: CallbackContext):
     user_input = update.message.text
     update.message.reply_text(welcome(user_input))
+    update.message.reply_text((data_collector(user_input)))
 
 
 """
@@ -197,7 +210,7 @@ updater.dispatcher.add_handler(CommandHandler('Downloadfiles', get_files_from_dr
 updater.dispatcher.add_handler(CommandHandler('Emailslistonly', converter_files_to_emails))
 updater.dispatcher.add_handler(CommandHandler('Displayemails', display_emails_via_bot))
 updater.dispatcher.add_handler(CommandHandler('Stop', stop))
-updater.dispatcher.add_handler(CommandHandler('RunJenkins',build_jenkins))
+updater.dispatcher.add_handler(CommandHandler('RunJenkins', build_jenkins))
 updater.dispatcher.add_handler(CommandHandler('Resume', resume_check))
 updater.dispatcher.add_handler(MessageHandler(Filters.document, downloader))
 updater.dispatcher.add_handler(MessageHandler(Filters.text, reply))
