@@ -91,9 +91,11 @@ def stop(update: Update, context: CallbackContext):
     jenkins_uri = '192.168.0.171:8080'
     job_name = 'Telegram_Monitoring_Bot'
     stop_build_url =f'http://{jenkins_uri}/job/{job_name}/{_build_number}/stop'
-    _response = requests.get(stop_build_url)
+    count=2
+    while count!=0:
+      requests.post(stop_build_url)
+      count-=1
     print(_response)
-    exit(-1)
 
 
 def resume_check(update: Update, context: CallbackContext):
