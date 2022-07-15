@@ -90,9 +90,9 @@ def stop(update: Update, context: CallbackContext):
     jenkins_uri = '192.168.0.171:8080'
     job_name = 'Telegram_Monitoring_Bot'
     stop_build_url =f'http://{jenkins_uri}/job/{job_name}/lastBuild/stop'
-    _respone = requests.get(stop_build_url)
-    assert _respone.status_code==200
-    exit(0)
+    _respone = requests.post(stop_build_url)
+    print(_response)
+    exit(-1)
 
 
 def resume_check(update: Update, context: CallbackContext):
@@ -202,7 +202,7 @@ def downloader(update: Update, context: CallbackContext):
 def reply(update, context: CallbackContext):
     user_input = update.message.text
     update.message.reply_text(welcome(user_input))
-    update.message.reply_text((data_collector(user_input)))
+    data_collector(user_input)
 
 
 """
