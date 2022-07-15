@@ -82,7 +82,7 @@ class run_file:
                 print(f"Problem in writing doc file into text --> {e}")
         return True
 
-    def generator_email(self, file_name):
+    def generator_email(self, file_name=None):
         """
         This will generating emails with help of regex and will store it in a file
         :param file_name:
@@ -119,10 +119,10 @@ class run_file:
         except:
             print(sys.exc_info())
 
-    def sending_emails(self, signature_name, user_email, password,
-                       year_exp):
+    def sending_emails(self, signature_name=None, user_email=None, password=None,
+                       year_exp=None):
 
-        resume = 'emails_id.txt'
+        resume = 'Resume.docx'
 
         """
         This function will send emails.

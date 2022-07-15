@@ -1,5 +1,9 @@
+import re
 import sys
 import time
+
+import requests
+
 from Run_File import run_file
 from list_of_files import list_of_files
 from telegram.ext.updater import Updater
@@ -94,8 +98,81 @@ def resume_check(update: Update, context: CallbackContext):
 def welcome(user_input=None):
     global _user_name
     _user_name = user_input
-    answer = f'Hi {_user_name}, Please Upload Your Resume and Type /Stop and Wait for few seconds.....'
+    answer = f'Hi {_user_name}, Please Upload Your Resume in docx format and Type /Stop and Wait for few seconds.....'
     return answer
+
+
+def build_jenkins(update: Update, context: CallbackContext):
+    QUEUE_POLL_INTERVAL = 2
+    JOB_POLL_INTERVAL = 20
+    OVERALL_TIMEOUT = 14400  # 4 hour
+    auth_token = '1174840704eb978d8e807d50ff06a53653'
+    jenkins_uri = '192.168.0.171:8080'
+    job_name = 'Send_Emails'
+    # start the build
+
+    start_build_url = 'http://{}/job/{}/build?token={}'.format(jenkins_uri, job_name, auth_token)
+    response = requests.post(start_build_url)
+
+    # from return headers get job queue location
+    #
+    m = re.match(r"http.+(queue.+)\/", response.headers['Location'])
+    if not m:
+        # To Do: handle error
+        print("Job started request did not have queue location")
+        sys.exit(1)
+
+    # poll the queue looking for job to start
+    #
+    queue_id = m.group(1)
+    job_info_url = 'http://{}/{}/api/json'.format(jenkins_uri, queue_id)
+    elasped_time = 0
+    print('{} Job {} added to queue: {}'.format(time.ctime(), job_name, job_info_url))
+    while True:
+        l = requests.get(job_info_url)
+        jqe = l.json()
+        task = jqe['task']['name']
+        try:
+            job_id = jqe['executable']['number']
+            break
+        except:
+            time.sleep(QUEUE_POLL_INTERVAL)
+            elasped_time += QUEUE_POLL_INTERVAL
+
+        if (elasped_time % (QUEUE_POLL_INTERVAL * 10)) == 0:
+            print("{}: Job {} not started yet from {}".format(time.ctime(), job_name, queue_id))
+
+    # poll job status waiting for a result
+    #
+    job_url = 'http://{}/job/{}/{}/api/json'.format(jenkins_uri, job_name, job_id)
+    start_epoch = int(time.time())
+    while True:
+        print("{}: Job started URL: {}".format(time.ctime(), job_url))
+        j = requests.get(job_url)
+        jje = j.json()
+        result = jje['result']
+        if result == 'SUCCESS':
+            # Do success steps
+            print("{}: Job: {} Status: {}".format(time.ctime(), job_name, result))
+            break
+        elif result == 'FAILURE':
+            # Do failure steps
+            print("{}: Job: {} Status: {}".format(time.ctime(), job_name, result))
+            break
+        elif result == 'ABORTED':
+            # Do aborted steps
+            print("{}: Job: {} Status: {}".format(time.ctime(), job_name, result))
+            break
+        else:
+            print("{}: Job: {} Status: {}. Polling again in {} secs".format(
+                time.ctime(), job_name, result, JOB_POLL_INTERVAL))
+
+        cur_epoch = int(time.time())
+        if (cur_epoch - start_epoch) > OVERALL_TIMEOUT:
+            print("No status before timeout of {} secs".format(OVERALL_TIMEOUT))
+            sys.exit(1)
+
+        time.sleep(JOB_POLL_INTERVAL)
 
 
 def downloader(update: Update, context: CallbackContext):
@@ -120,6 +197,7 @@ updater.dispatcher.add_handler(CommandHandler('Downloadfiles', get_files_from_dr
 updater.dispatcher.add_handler(CommandHandler('Emailslistonly', converter_files_to_emails))
 updater.dispatcher.add_handler(CommandHandler('Displayemails', display_emails_via_bot))
 updater.dispatcher.add_handler(CommandHandler('Stop', stop))
+updater.dispatcher.add_handler(CommandHandler('RunJenkins',build_jenkins))
 updater.dispatcher.add_handler(CommandHandler('Resume', resume_check))
 updater.dispatcher.add_handler(MessageHandler(Filters.document, downloader))
 updater.dispatcher.add_handler(MessageHandler(Filters.text, reply))
